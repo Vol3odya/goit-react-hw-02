@@ -7,21 +7,15 @@ import css from './App.module.css'
 
 export default function App() {
   const [clicks, setClicks] = useState(() => {
-    const save = {
-      good: Number(window.localStorage.getItem("saveGood")),
-      neutral: Number(window.localStorage.getItem("saveNeutral")),
-      bad: Number(window.localStorage.getItem("saveBad")),
-    };
-    return save.good !== undefined ? save : {
+    const save = window.localStorage.getItem("save")
+    return save !== null ? JSON.parse(save) : {
       good: 0,
       neutral: 0,
       bad:0,
     };
   });
   useEffect(() => {
-    window.localStorage.setItem('saveGood', JSON.stringify(clicks.good));
-    window.localStorage.setItem('saveNeutral', JSON.stringify(clicks.neutral));
-    window.localStorage.setItem('saveBad', JSON.stringify(clicks.bad));
+    window.localStorage.setItem('save', JSON.stringify(clicks));
   }, [clicks]);
 
   function updateFeedback (feedbackType) {
@@ -34,20 +28,22 @@ export default function App() {
       neutral: (feedbackType == 'neutral' ? neutral+1 : neutral),
       bad: (feedbackType == 'bad' ? bad+1 : bad),
     });
-    if (feedbackType == 'reset') {
-      setClicks({
-        good: 0,
-        neutral: 0,
-        bad: 0,
-      });
-    }
   }
+
+  function clicksReset() {
+    setClicks({
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    });
+  };
   const totalFeedback = clicks.good + clicks.neutral + clicks.bad;
+  const goodtotal = Math.round((clicks.good / totalFeedback) * 100);
   return (
     <div className={css.container}>
       <Description />
-      <Options value={clicks} onUpdate={updateFeedback} reset={totalFeedback} />
-      { totalFeedback!==0 ? <Feedback value={clicks}/> : <Notification/>}
+      <Options value={clicks} onUpdate={updateFeedback} onReset={clicksReset} total={totalFeedback} />
+      {totalFeedback !== 0 ? <Feedback value={clicks} total={totalFeedback} goodtotal={goodtotal} /> : <Notification/>}
     </div>
   )
 }
